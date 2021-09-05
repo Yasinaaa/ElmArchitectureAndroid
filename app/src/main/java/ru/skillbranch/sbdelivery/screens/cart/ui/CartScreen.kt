@@ -15,9 +15,10 @@ import androidx.compose.ui.unit.sp
 import ru.skillbranch.sbdelivery.screens.cart.logic.CartFeature
 import ru.skillbranch.sbdelivery.screens.cart.data.CartUiState
 import ru.skillbranch.sbdelivery.screens.cart.data.ConfirmDialogState
+import ru.skillbranch.sbdelivery.screens.root.logic.Msg
 
 @Composable
-fun CartScreen(state: CartFeature.State, accept: (CartFeature.Msg) -> Unit) {
+fun CartScreen(state: CartFeature.State, accept: (Msg) -> Unit) {
     when (state.list) {
         is CartUiState.Value -> {
             Column() {
@@ -28,10 +29,26 @@ fun CartScreen(state: CartFeature.State, accept: (CartFeature.Msg) -> Unit) {
                         val items = state.list.dishes
                         items(items = items, key = { it.id }) {
                             CartListItem(it,
-                                onProductClick = { dishId: String, title: String -> accept(CartFeature.Msg.ClickOnDish(dishId, title))},
-                                onIncrement = { dishId -> accept(CartFeature.Msg.IncrementCount(dishId))},
-                                onDecrement = { dishId -> accept(CartFeature.Msg.DecrementCount(dishId))},
-                                onRemove = { dishId, title ->/*TODO*/ }
+                                onProductClick = { dishId: String, title: String ->
+                                    CartFeature.Msg.ClickOnDish(dishId, title)
+                                        .let(Msg::Cart)
+                                        .also(accept)
+                                },
+                                onIncrement = { dishId ->
+                                    CartFeature.Msg.IncrementCount(dishId)
+                                        .let(Msg::Cart)
+                                        .also(accept)
+                                },
+                                onDecrement = { dishId ->
+                                    CartFeature.Msg.DecrementCount(dishId)
+                                        .let(Msg::Cart)
+                                        .also(accept)
+                                },
+                                onRemove = { dishId, title ->
+                                    CartFeature.Msg.ShowConfirm(dishId, title)
+                                        .let(Msg::Cart)
+                                        .also(accept)
+                                }
                             )
                         }
 
@@ -39,8 +56,7 @@ fun CartScreen(state: CartFeature.State, accept: (CartFeature.Msg) -> Unit) {
                     modifier = Modifier.weight(1f)
                 )
                 Column(
-                    modifier = Modifier
-                        .padding(16.dp),
+                    modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.Bottom
                 ) {
                     Row() {
@@ -61,7 +77,14 @@ fun CartScreen(state: CartFeature.State, accept: (CartFeature.Msg) -> Unit) {
                     }
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+                            val order = state.list.dishes
+                                .map { it.id to it.count }
+                                .toMap()
+                            CartFeature.Msg.SendOrder(order)
+                                .let(Msg::Cart)
+                                .also(accept)
+                        },
                         colors = ButtonDefaults.buttonColors(
                             backgroundColor = MaterialTheme.colors.secondary,
                             contentColor = MaterialTheme.colors.onSecondary
@@ -93,7 +116,7 @@ fun CartScreen(state: CartFeature.State, accept: (CartFeature.Msg) -> Unit) {
 
     if (state.confirmDialog is ConfirmDialogState.Show) {
         AlertDialog(
-            onDismissRequest = {  /*TODO*/  },
+            onDismissRequest = {    },
             backgroundColor = Color.White,
             contentColor = MaterialTheme.colors.primary,
             title = { Text(text = "Вы уверены?") },
@@ -101,13 +124,17 @@ fun CartScreen(state: CartFeature.State, accept: (CartFeature.Msg) -> Unit) {
             buttons = {
                 Row {
                     TextButton(
-                        onClick = { /*TODO*/  },
+                        onClick = {  },
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Нет", color = MaterialTheme.colors.secondary)
                     }
                     TextButton(
-                        onClick = { /*TODO*/  },
+                        onClick = {
+                            CartFeature.Msg.RemoveFromCart(state.confirmDialog.id)
+                                .let(Msg::Cart)
+                                .also(accept)
+                                  },
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Да", color = MaterialTheme.colors.secondary)

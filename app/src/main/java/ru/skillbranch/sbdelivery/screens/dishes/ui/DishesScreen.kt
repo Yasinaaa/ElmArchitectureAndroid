@@ -13,11 +13,11 @@ import androidx.compose.ui.unit.dp
 import ru.skillbranch.sbdelivery.R
 import ru.skillbranch.sbdelivery.screens.dishes.data.DishesUiState
 import ru.skillbranch.sbdelivery.screens.dishes.logic.DishesFeature
+import ru.skillbranch.sbdelivery.screens.root.logic.Msg
 
 @Composable
-fun DishesScreen(state: DishesFeature.State, accept: (DishesFeature.Msg) -> Unit) {
+fun DishesScreen(state: DishesFeature.State, accept: (Msg) -> Unit) {
     when (state.list) {
-        is DishesUiState.Error -> TODO()
 
         is DishesUiState.Empty -> Box(
             contentAlignment = Alignment.Center,
@@ -45,8 +45,9 @@ fun DishesScreen(state: DishesFeature.State, accept: (DishesFeature.Msg) -> Unit
 
         is DishesUiState.Value -> LazyGrid(items = state.list.dishes) {
             DishItem(dish = it,
-                onClick = { dish -> accept(DishesFeature.Msg.ClickDish(dish.id, dish.title)) },
-                addToCart = { dish -> accept(DishesFeature.Msg.AddToCart(dish.id, dish.title)) })
+                onClick = { accept(Msg.ClickDish(it.id, it.title))},
+                addToCart = { accept(Msg.AddToCart(it.id, it.title))}
+            )
         }
     }
 }

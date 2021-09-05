@@ -4,6 +4,7 @@ import ru.skillbranch.sbdelivery.data.network.res.ReviewRes
 import ru.skillbranch.sbdelivery.screens.dish.data.DishContent
 import ru.skillbranch.sbdelivery.screens.dish.data.DishUiState
 import ru.skillbranch.sbdelivery.screens.dish.data.ReviewUiState
+import ru.skillbranch.sbdelivery.screens.root.logic.Eff
 import java.io.Serializable
 
 object DishFeature {
@@ -15,7 +16,7 @@ object DishFeature {
     data class State(
         val id: String,
         val title: String,
-        val isLiked:Boolean=false,
+        val isLiked: Boolean = false,
         val isReviewDialog: Boolean = false,
         val reviews: ReviewUiState = ReviewUiState.Loading,
         val content: DishUiState = DishUiState.Loading,
@@ -31,13 +32,13 @@ object DishFeature {
         object Terminate: Eff()
     }
 
-    sealed class Msg{
-        object ToggleLike : Msg()
-        object IncrementCount : Msg()
-        object DecrementCount : Msg()
-        object ShowReviewDialog : Msg()
-        object HideReviewDialog : Msg()
-        data class SendReview(val dishId:String, val rating: Int, val review:String) : Msg()
+    sealed class Msg {
+        object ToggleLike: Msg()
+        object IncrementCount: Msg()
+        object DecrementCount: Msg()
+        object ShowReviewDialog: Msg()
+        object HideReviewDialog: Msg()
+        data class SendReview(val dishId: String, val rating: Int, val review: String) : Msg()
         data class ShowDish(val dish: DishContent) : Msg()
         data class AddToCart(val id: String, val count: Int) : Msg()
         data class ShowReviews(val reviews: List<ReviewRes>) : Msg()

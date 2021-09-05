@@ -32,9 +32,17 @@ fun RootScreen(vm: RootViewModel) {
     val scaffoldState = rememberScaffoldState()
     val scope = rememberCoroutineScope()
 
-    scope.launch {
-        vm.dispatcher.notifications
-            .collect { notification -> renderNotification(notification, scaffoldState, vm::accept) }
+    LaunchedEffect(key1 = Unit) {
+        scope.launch {
+            vm.dispatcher.notifications
+                .collect { notification ->
+                    renderNotification(
+                        notification,
+                        scaffoldState,
+                        vm::accept
+                    )
+                }
+        }
     }
 
     Scaffold(
@@ -54,9 +62,21 @@ fun ContentHost(vm: RootViewModel) {
 
     Navigation(currentScreen = screen, modifier = Modifier.fillMaxSize()) { currentScreen ->
         when (currentScreen) {
-            is ScreenState.Dishes -> DishesScreen(currentScreen.state, { vm.accept(Msg.Dishes(it)) })
-            is ScreenState.Dish -> DishScreen(currentScreen.state, { vm.accept(Msg.Dish(it)) })
-            is ScreenState.Cart -> CartScreen(currentScreen.state, { vm.accept(Msg.Cart(it)) })
+            is ScreenState.Dishes ->
+                DishesScreen(
+                    currentScreen.state,
+                    vm::accept
+                )
+            is ScreenState.Dish ->
+                DishScreen(
+                    currentScreen.state,
+                    vm::accept
+                )
+            is ScreenState.Cart ->
+                CartScreen(
+                    currentScreen.state,
+                    vm::accept
+                )
         }
     }
 

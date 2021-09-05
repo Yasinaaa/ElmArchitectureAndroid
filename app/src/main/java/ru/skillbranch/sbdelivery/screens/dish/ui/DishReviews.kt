@@ -35,7 +35,9 @@ fun DishReviews(reviews: ReviewUiState, rating: Float, accept: (DishFeature.Msg)
         is ReviewUiState.Value -> Reviews(
             reviews = reviews.list,
             rating = rating,
-            onAddReview = { /*TODO*/ },
+            onAddReview = {
+                accept(DishFeature.Msg.ShowReviewDialog)
+            },
             modifier = Modifier
                 .fillMaxWidth()
         )

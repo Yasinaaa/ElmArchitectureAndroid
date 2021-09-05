@@ -27,11 +27,12 @@ import coil.compose.rememberImagePainter
 import ru.skillbranch.sbdelivery.R
 import ru.skillbranch.sbdelivery.screens.dish.logic.DishFeature
 import ru.skillbranch.sbdelivery.screens.dish.data.DishContent
+import ru.skillbranch.sbdelivery.screens.root.logic.Msg
 import ru.skillbranch.sbdelivery.screens.root.ui.AppTheme
 
 @ExperimentalCoilApi
 @Composable
-fun DishContent(dish: DishContent, count: Int, accept: (DishFeature.Msg) -> Unit) {
+fun DishContent(dish: DishContent, count: Int, accept: (Msg) -> Unit) {
     ConstraintLayout {
 
         val (title, poster, description, price, addBtn) = createRefs()
@@ -90,8 +91,16 @@ fun DishContent(dish: DishContent, count: Int, accept: (DishFeature.Msg) -> Unit
 
         DishPrice(price = dish.price, oldPrice = dish.oldPrice,
             count = count,
-            onIncrement = { /*TODO*/ },
-            onDecrement = { /*TODO*/ },
+            onIncrement = {
+                DishFeature.Msg.IncrementCount
+                    .let(Msg::Dish)
+                    .also(accept)
+            },
+            onDecrement = {
+                DishFeature.Msg.DecrementCount
+                    .let(Msg::Dish)
+                    .also(accept)
+            },
             modifier = Modifier
                 .padding(start = 16.dp, end = 16.dp)
                 .constrainAs(price) {
@@ -101,7 +110,11 @@ fun DishContent(dish: DishContent, count: Int, accept: (DishFeature.Msg) -> Unit
                 })
 
         TextButton(
-            onClick = { /*TODO*/ },
+            onClick = {
+                DishFeature.Msg.AddToCart(dish.id, count)
+                    .let(Msg::Dish)
+                    .also(accept)
+            },
             colors = ButtonDefaults.buttonColors(
                 backgroundColor = MaterialTheme.colors.secondary,
                 contentColor = MaterialTheme.colors.onSecondary

@@ -21,6 +21,7 @@ import coil.compose.ImagePainter
 import coil.compose.rememberImagePainter
 import ru.skillbranch.sbdelivery.R
 import ru.skillbranch.sbdelivery.screens.dishes.data.DishItem
+import ru.skillbranch.sbdelivery.screens.root.logic.Msg
 import ru.skillbranch.sbdelivery.screens.root.ui.AppTheme
 
 
@@ -149,6 +150,10 @@ fun DishItemPreview(){
         "test"
     )
     AppTheme {
-        DishItem(dish = dish, onClick = { /*TODO*/ }, addToCart = { /*TODO*/ })
+        DishItem(
+            dish = dish,
+            onClick = { },
+            addToCart = {}
+        )
     }
 }

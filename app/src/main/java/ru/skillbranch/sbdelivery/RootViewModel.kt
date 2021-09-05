@@ -13,6 +13,7 @@ class RootViewModel @Inject constructor(
     val savedState : SavedStateHandle,
     val dispatcher: EffDispatcher
 ) : ViewModel() {
+
     val feature = RootFeature
 
     init {

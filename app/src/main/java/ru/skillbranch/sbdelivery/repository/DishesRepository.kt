@@ -1,6 +1,5 @@
 package ru.skillbranch.sbdelivery.repository
 
-import kotlinx.coroutines.delay
 import ru.skillbranch.sbdelivery.data.db.dao.CartDao
 import ru.skillbranch.sbdelivery.data.db.dao.DishesDao
 import ru.skillbranch.sbdelivery.data.db.entity.CartItemPersist
@@ -9,10 +8,11 @@ import ru.skillbranch.sbdelivery.data.network.res.DishRes
 import ru.skillbranch.sbdelivery.data.toDishItem
 import ru.skillbranch.sbdelivery.data.toDishPersist
 import ru.skillbranch.sbdelivery.screens.dishes.data.DishItem
+import java.util.*
 import javax.inject.Inject
 
 interface IDishesRepository {
-    suspend fun searchDishes(newInput: String): List<DishItem>
+    suspend fun searchDishes(query: String): List<DishItem>
     suspend fun isEmptyDishes(): Boolean
     suspend fun syncDishes()
     suspend fun findDishes(): List<DishItem>
@@ -27,13 +27,13 @@ class DishesRepository @Inject constructor(
     private val dishesDao: DishesDao,
     private val cartDao: CartDao
 ) : IDishesRepository {
+
     override suspend fun searchDishes(query: String): List<DishItem> {
         return if (query.isEmpty()) findDishes()
-        else dishesDao.findDishesFrom(query)
-            .map { it.toDishItem() }
+        else dishesDao.findDishesFrom(query).map { it.toDishItem() }
     }
 
-    override suspend fun isEmptyDishes(): Boolean = true
+    override suspend fun isEmptyDishes(): Boolean = dishesDao.dishesCounts() == 0
 
     override suspend fun syncDishes() {
         val dishes = mutableListOf<DishRes>()
@@ -42,7 +42,7 @@ class DishesRepository @Inject constructor(
             val res = api.getDishes(offset * 10, 10)
             if (res.isSuccessful) {
                 offset++
-                dishes.addAll(res.body()!!)
+                res.body()?.let { dishes.addAll(it) }
             } else break
         }
         dishesDao.insertDishes(dishes.map { it.toDishPersist() })
@@ -52,12 +52,8 @@ class DishesRepository @Inject constructor(
         dishesDao.findAllDishes().map { it.toDishItem() }
 
     override suspend fun findSuggestions(query: String): Map<String, Int> {
-        return mapOf(
-            "test" to 4,
-            "test2" to 2,
-            "test3" to 1,
-        )
-//        TODO("Not yet implemented")
+        return if (query.isEmpty()) emptyMap()
+        else toSuggestions(searchDishes(query), query)
     }
 
     override suspend fun addDishToCart(id: String) {
@@ -66,11 +62,22 @@ class DishesRepository @Inject constructor(
         else cartDao.addItem(CartItemPersist(dishId = id))
     }
 
-    override suspend fun removeDishFromCart(id: String) {
-        val count = cartDao.dishCount(id) ?: 0
-        if (count > 0) cartDao.decrementItemCount(id)
-        else cartDao.removeItem(id)
+    override suspend fun removeDishFromCart(dishId: String) {
+        val count = cartDao.dishCount(dishId) ?: 0
+        if (count > 0) cartDao.decrementItemCount(dishId)
+        else cartDao.removeItem(dishId)
     }
 
     override suspend fun cartCount(): Int = cartDao.cartCount() ?: 0
+
+    private fun toSuggestions(list: List<DishItem>, query: String) = list
+        .map { it.title.replace(Regex("[.,!?\"-]"), "") }
+        .flatMap { it.split(" ") }
+        .filter { it.contains(query, true) }
+        .groupingBy { it.lowercase(Locale.getDefault()) }
+        .eachCount()
+        .toList()
+        .sortedByDescending { (_, count) -> count }
+        .take(5)
+        .toMap()
 }

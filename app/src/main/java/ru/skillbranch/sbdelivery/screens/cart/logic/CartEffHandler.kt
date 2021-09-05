@@ -1,18 +1,18 @@
 package ru.skillbranch.sbdelivery.screens.cart.logic
 
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import ru.skillbranch.sbdelivery.repository.CartRepository
 import ru.skillbranch.sbdelivery.screens.root.logic.Eff
-import ru.skillbranch.sbdelivery.screens.root.logic.IEffHandler
+import ru.skillbranch.sbdelivery.screens.root.logic.IEffectHandler
 import ru.skillbranch.sbdelivery.screens.root.logic.Msg
 import javax.inject.Inject
 
 class CartEffHandler @Inject constructor(
-    private val repository: CartRepository,
-    private val notifyChanel: Channel<Eff.Notification>
-) : IEffHandler<CartFeature.Eff, Msg> {
+    val repository: CartRepository,
+    private val notifyChannel: Channel<Eff.Notification>
+) : IEffectHandler<CartFeature.Eff, Msg> {
+
     override suspend fun handle(effect: CartFeature.Eff, commit: (Msg) -> Unit) {
 
         suspend fun updateCart(){
@@ -23,20 +23,31 @@ class CartEffHandler @Inject constructor(
         }
 
         when(effect){
+
             is CartFeature.Eff.DecrementItem -> {
                 repository.decrementItem(effect.dishId)
                 updateCart()
             }
+
             is CartFeature.Eff.IncrementItem -> {
                 repository.incrementItem(effect.dishId)
                 updateCart()
             }
+
             is CartFeature.Eff.LoadCart -> {
                 val items = repository.loadItems()
                 commit(CartFeature.Msg.ShowCart(items).toMsg())
             }
-            is CartFeature.Eff.RemoveItem -> TODO()
-            is CartFeature.Eff.SendOrder -> TODO()
+
+            is CartFeature.Eff.RemoveItem -> {
+                repository.removeItem(effect.dishId)
+                updateCart()
+            }
+
+            is CartFeature.Eff.SendOrder -> {
+                repository.clearCart()
+                notifyChannel.send(Eff.Notification.Text("Заказ оформлен"))
+            }
         }
     }
 

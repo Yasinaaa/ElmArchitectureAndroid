@@ -38,7 +38,7 @@ object RootFeature {
         }
     }
 
-    fun listen(scope: CoroutineScope, effDispatcher: IEffHandler<Eff, Msg>, initState: RootState?) {
+    fun listen(scope: CoroutineScope, effDispatcher: EffDispatcher, initState: RootState?) {
         Log.e("RootFeature", "Start listen init state: $initState")
         _scope = scope
         _scope.launch {
@@ -124,6 +124,9 @@ sealed class Msg {
     //Root mutation
     data class UpdateCartCount(val count: Int) : Msg()
 
+    data class AddToCart(val id: String, val title: String) : Msg()
+    data class RemoveFromCart(val id: String, val title: String) : Msg()
+    data class ClickDish(val id: String, val title: String) : Msg()
 }
 
 sealed class Eff {
